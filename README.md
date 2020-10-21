@@ -1,2 +1,2 @@
-# SSP
-Projekt z SSP
+# SSP/MPT
+Projekt z SSP/MPT
