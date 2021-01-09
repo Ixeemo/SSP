@@ -18,7 +18,7 @@
 package net.floodlightcontroller.routing;
 
 import java.util.ArrayList;
-
+import java.util.List;
 import org.projectfloodlight.openflow.types.DatapathId;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.U64;
@@ -83,4 +83,22 @@ public interface IRoutingService extends IFloodlightService {
      */
     public boolean routeExists(DatapathId src, DatapathId dst, boolean tunnelEnabled);
 
+    List<Path> getPathsFast(DatapathId src, DatapathId dst);
+
+    /**
+     * This function returns K number of paths between a source and destination 
+     * **if they exist in the pathcache**. If the caller requests more paths than 
+     * available, only the paths already stored in memory will be returned.
+     * 
+     * See {@link #getPathsSlow(DatapathId, DatapathId, int)} to compute 
+     * additional paths in real-time.
+     * 
+     * The number of paths returned will be the min(numReqPaths, maxConfig),
+     * where maxConfig is the configured ceiling on paths to precompute.
+     *
+     * @param src source switch
+     * @param dst destination switch
+     * @param numReqPaths the requested quantity of paths
+     * @return list of paths ordered least to greatest cost
+     */
 }

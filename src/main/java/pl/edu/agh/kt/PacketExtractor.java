@@ -2,6 +2,7 @@ package pl.edu.agh.kt;
 
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.types.EthType;
+import org.projectfloodlight.openflow.types.IPv4Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ public class PacketExtractor {
 	protected IFloodlightProviderService floodlightProvider;
 	private Ethernet eth;
 	private IPv4 ipv4;
+	public IPv4Address destIP;
 	private ARP arp;
 	private TCP tcp;
 	private UDP udp;
@@ -27,11 +29,11 @@ public class PacketExtractor {
 	public PacketExtractor(FloodlightContext cntx, OFMessage msg) {
 		this.cntx = cntx;
 		this.msg = msg;
-		logger.info("PacketExtractor: Constructor method called");
+		//logger.info("PacketExtractor: Constructor method called");
 	}
 
 	public PacketExtractor() {
-		logger.info("PacketExtractor: Constructor method called");
+		//logger.info("PacketExtractor: Constructor method called");
 	}
 
 	public void packetExtract(FloodlightContext cntx) {
@@ -39,25 +41,32 @@ public class PacketExtractor {
 		extractEth();
 	}
 
+	public IPv4Address getDestIP() {
+		return destIP;
+	}
+
 	public void extractEth() {
 		eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
-		logger.info("Frame: src mac {}", eth.getSourceMACAddress());
-		logger.info("Frame: dst mac {}", eth.getDestinationMACAddress());
-		logger.info("Frame: ether_type {}", eth.getEtherType());
+		//logger.info("Frame: src mac {}", eth.getSourceMACAddress());
+		//logger.info("Frame: dst mac {}", eth.getDestinationMACAddress());
+		//logger.info("Frame: ether_type {}", eth.getEtherType());
 
 		if (eth.getEtherType() == EthType.ARP) {
 			arp = (ARP) eth.getPayload();
+			destIP = arp.getTargetProtocolAddress();
 			//extractArp();
 		}
 		if (eth.getEtherType() == EthType.IPv4) {
 			ipv4 = (IPv4) eth.getPayload();
+			destIP = ipv4.getDestinationAddress();
+			logger.info("{}", ipv4.getDestinationAddress());
 			//extractIp();
 		}
 
 	}
 
 	public void extractArp() {
-		logger.info("ARP extractor");
+		logger.info("ARP extractor, {}");
 	}
 
 	public void extractIp() {

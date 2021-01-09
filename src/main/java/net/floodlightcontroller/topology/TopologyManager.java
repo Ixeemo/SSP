@@ -60,6 +60,7 @@ import net.floodlightcontroller.packet.LLDP;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.routing.IRoutingService;
 import net.floodlightcontroller.routing.Link;
+import net.floodlightcontroller.routing.Path;
 import net.floodlightcontroller.routing.Route;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.topology.web.TopologyWebRoutable;
@@ -1537,5 +1538,11 @@ public class TopologyManager implements IFloodlightModule, ITopologyService, IRo
 			ports.removeAll(qPorts);
 
 		return ports;
+	}
+
+	@Override
+	public List<Path> getPathsFast(DatapathId src, DatapathId dst) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

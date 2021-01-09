@@ -33,9 +33,6 @@ import net.floodlightcontroller.packet.UDP;
 
 public class Flows {
 
-	public static short idleTimeout = 5;
-	public static short hardTimeout = 0;
-	
 	private static final Logger logger = LoggerFactory.getLogger(Flows.class);
 
 	public static short FLOWMOD_DEFAULT_IDLE_TIMEOUT = 5; // in seconds
@@ -47,28 +44,15 @@ public class Flows {
 	protected static boolean FLOWMOD_DEFAULT_MATCH_IP_ADDR = true;
 	protected static boolean FLOWMOD_DEFAULT_MATCH_TRANSPORT = true;
 
-	public static short getIdleTimeout() {
-		return idleTimeout;
-	}
-	public static void setIdleTimeout(short idleTimeout) {
-		Flows.idleTimeout = idleTimeout;
-	}
-	public static short getHardTimeout() {
-		return hardTimeout;
-	}
-	public static void setHardTimeout(short hardTimeout) {
-		Flows.hardTimeout = hardTimeout;
-	}
-	
 	public Flows() {
 		logger.info("Flows() begin/end");
 	}
-
-	public static void simpleAdd(IOFSwitch sw, OFPacketIn pin, FloodlightContext cntx, OFPort outPort) {
+	
+	public static void simpleAdd(IOFSwitch sw, OFPacketIn pin, FloodlightContext cntx, OFPort outPort, OFPort inPort) {
 		// FlowModBuilder
 		OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd();
 		// match
-		Match m = createMatchFromPacket(sw, pin.getInPort(), cntx);
+		Match m = createMatchFromPacket(sw, inPort, cntx);
 
 		// actions
 		OFActionOutput.Builder aob = sw.getOFFactory().actions().buildOutput();
@@ -76,14 +60,15 @@ public class Flows {
 		aob.setPort(outPort);
 		aob.setMaxLen(Integer.MAX_VALUE);
 		actions.add(aob.build());
-		fmb.setMatch(m).setIdleTimeout(idleTimeout).setHardTimeout(hardTimeout)
+		fmb.setMatch(m).setIdleTimeout(FLOWMOD_DEFAULT_IDLE_TIMEOUT).setHardTimeout(FLOWMOD_DEFAULT_HARD_TIMEOUT)
 				.setBufferId(pin.getBufferId()).setOutPort(outPort).setPriority(FLOWMOD_DEFAULT_PRIORITY);
 		fmb.setActions(actions);
 		// write flow to switch
 		try {
 			sw.write(fmb.build());
+			logger.info("**************** {} ****************", sw);
 			logger.info("Flow from port {} forwarded to port {}; match: {}",
-					new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+					new Object[] { inPort.getPortNumber(), outPort.getPortNumber(), m.toString() });
 		} catch (Exception e) {
 			logger.error("error {}", e);
 		}
