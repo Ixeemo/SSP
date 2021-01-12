@@ -85,6 +85,7 @@ public class StatisticsCollector {
 					*/
 					
 					for (int i=1; i<5; i++) {
+						Integer flows = 0;
 						String id = sw.getId().toString();
 						if (i != Integer.parseInt(id.substring(id.length()-1))) {
 							reqFlow = sw.getOFFactory().buildFlowStatsRequest().setOutPort(OFPort.of(i)).setTableId(TableId.ALL).build();
@@ -98,10 +99,12 @@ public class StatisticsCollector {
 						//logger.info("XID: {}", psr.getXid());
 						//logger.info("Switch hash: {}", psr.hashCode());
 						
-//							for (OFFlowStatsEntry pse : psr.getEntries()) {
-//								logger.info("\tFlow Info: {}", pse.getMatch());
-//							}
-								activeFlowsPerPort.put(i, psr.getEntries().size());
+							for (OFFlowStatsEntry pse : psr.getEntries()) {
+								//logger.info("\tFlow Info: {}", pse.getMatch());
+								flows = flows + 1;
+							}
+								activeFlowsPerPort.put(i, flows);
+								//activeFlowsPerPort.put(i, psr.getEntries().size());
 								activeFlowsInSw.put(sw, activeFlowsPerPort);
 								//logger.info("Information: {}", activeFlowsInSw);
 							//}

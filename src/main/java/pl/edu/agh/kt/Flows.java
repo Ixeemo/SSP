@@ -27,6 +27,7 @@ import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.packet.Data;
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.ICMP;
 import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.packet.TCP;
 import net.floodlightcontroller.packet.UDP;
@@ -60,8 +61,9 @@ public class Flows {
 		aob.setPort(outPort);
 		aob.setMaxLen(Integer.MAX_VALUE);
 		actions.add(aob.build());
-		fmb.setMatch(m).setIdleTimeout(FLOWMOD_DEFAULT_IDLE_TIMEOUT).setHardTimeout(FLOWMOD_DEFAULT_HARD_TIMEOUT)
-				.setBufferId(pin.getBufferId()).setOutPort(outPort).setPriority(FLOWMOD_DEFAULT_PRIORITY);
+		fmb.setMatch(m).setIdleTimeout(FLOWMOD_DEFAULT_IDLE_TIMEOUT).setHardTimeout(FLOWMOD_DEFAULT_HARD_TIMEOUT).setOutPort(outPort).setPriority(FLOWMOD_DEFAULT_PRIORITY);
+//		fmb.setMatch(m).setIdleTimeout(FLOWMOD_DEFAULT_IDLE_TIMEOUT).setHardTimeout(FLOWMOD_DEFAULT_HARD_TIMEOUT)
+//				.setBufferId(pin.getBufferId()).setOutPort(outPort).setPriority(FLOWMOD_DEFAULT_PRIORITY);
 		fmb.setActions(actions);
 		// write flow to switch
 		try {
@@ -125,6 +127,10 @@ public class Flows {
 					UDP udp = (UDP) ip.getPayload();
 					mb.setExact(MatchField.IP_PROTO, IpProtocol.UDP).setExact(MatchField.UDP_SRC, udp.getSourcePort())
 							.setExact(MatchField.UDP_DST, udp.getDestinationPort());
+				} else if (ip.getProtocol().equals(IpProtocol.ICMP)) {
+					ICMP icmp = (ICMP) ip.getPayload();
+					mb.setExact(MatchField.IP_PROTO, IpProtocol.ICMP);//.setExact(MatchField.ICMPV4_CODE, icmp.getIcmpCode())
+							//.setExact(MatchField.ICMPV4_TYPE, icmp.getIcmpType());
 				}
 			}
 		} else if (eth.getEtherType() == EthType.ARP) { /*

@@ -88,6 +88,7 @@ public class Routes {
 				for (Integer p: portToRemove) {
 					activeFlowsPerPort.remove(Integer.parseInt(p.toString()));
 				}
+				logger.info("**************** {} ****************", activeFlowsPerPort);
 				
 				Integer minNum = Collections.min(activeFlowsPerPort.values());
 				for (Map.Entry<Integer, Integer> hash: activeFlowsPerPort.entrySet()) {
