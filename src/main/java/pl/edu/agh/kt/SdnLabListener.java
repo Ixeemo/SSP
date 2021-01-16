@@ -85,9 +85,8 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 		extractor.packetExtract(cntx);
 		destIP = extractor.getDestIP();
 		//logger.info("***{} ***", extractor.getDestIP());
-		
 		activeFlows = StatisticsCollector.getFlows();
-		
+				
 		//logger.info("**************** {} ************GET FLOWS****", activeFlowsInSw);
 
 		Routes.calculatePath(sw, activeFlows, destIP, pin, cntx);
