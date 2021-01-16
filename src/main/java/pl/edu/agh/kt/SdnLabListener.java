@@ -1,6 +1,7 @@
 package pl.edu.agh.kt;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 	protected IPv4Address destIP;
 	//protected Iterable<IOFSwitch> swList = new ArrayList<>();
 	protected static Map<DatapathId, IOFSwitch> swList = new HashMap<DatapathId, IOFSwitch>();
-	protected HashMap<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw = new HashMap<IOFSwitch, HashMap<Integer, Integer>>();
+	protected Map<IOFSwitch, HashMap<Integer, Integer>> activeFlows;
 	private static IOFSwitchService switchService;
 	
 	
@@ -71,8 +72,9 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 	@Override
 	public net.floodlightcontroller.core.IListener.Command receive(IOFSwitch sw, OFMessage msg,
 			FloodlightContext cntx) {
-
+		activeFlows = Collections.synchronizedMap(new HashMap<IOFSwitch, HashMap<Integer, Integer>>());
 		logger.info("************* NEW PACKET IN *************");
+		logger.info("************* {} **********SW***", sw.getId());
 		
 		// TODO LAB 6
 		OFPacketIn pin = (OFPacketIn) msg;
@@ -84,9 +86,11 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 		destIP = extractor.getDestIP();
 		//logger.info("***{} ***", extractor.getDestIP());
 		
-		activeFlowsInSw = StatisticsCollector.getFlows();
+		activeFlows = StatisticsCollector.getFlows();
+		
+		//logger.info("**************** {} ************GET FLOWS****", activeFlowsInSw);
 
-		Routes.calculatePath(sw, activeFlowsInSw, destIP, pin, cntx);
+		Routes.calculatePath(sw, activeFlows, destIP, pin, cntx);
 //		if (pin.getInPort() == OFPort.of(1)) {
 //			outPort = OFPort.of(2);
 //		} else

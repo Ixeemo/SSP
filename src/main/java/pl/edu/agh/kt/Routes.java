@@ -16,6 +16,7 @@ import net.floodlightcontroller.linkdiscovery.internal.LinkInfo;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,10 +36,13 @@ public class Routes {
 	//protected List<Path> paths = new ArrayList<>();
 	protected static final Logger logger = LoggerFactory.getLogger(Routes.class);
 	protected List<Route> paths = new ArrayList<>();
-	protected static List<DatapathId> switchesID = new ArrayList<>();
+	protected static List<IOFSwitch> switchesID;
 	protected static HashMap<String, String> hosts = SdnLabListener.getHosts();
 	protected static HashMap<Integer, Integer> val;
 	protected static HashMap<Integer, Integer> activeFlowsPerPort;
+	protected static HashMap<OFPort, OFPort> ports = new HashMap<OFPort, OFPort>();
+	protected static HashMap<IOFSwitch, HashMap<OFPort, OFPort>> toAdd;
+
 
 	
 	public Routes(IRoutingService routingService) {
@@ -46,7 +50,7 @@ public class Routes {
 		this.routingService = routingService;
 	}
 	
-	public static void calculatePath(IOFSwitch firstSW, HashMap<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw, IPv4Address destIP, OFPacketIn pin, FloodlightContext cntx) {
+	public static void calculatePath(IOFSwitch firstSW, Map<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw, IPv4Address destIP, OFPacketIn pin, FloodlightContext cntx) {
 		String dest = "";
 		Set<Link> linkList = SdnLabListener.getLinks();
 		int i = 0;
@@ -54,6 +58,9 @@ public class Routes {
 		OFPort outPort = OFPort.of(0);
 		OFPort inPort = pin.getInPort();
 		List<Integer> portToRemove = new ArrayList<>();
+		activeFlowsPerPort = new HashMap<Integer, Integer>();
+		switchesID = new ArrayList<>();
+		toAdd = new HashMap<IOFSwitch, HashMap<OFPort, OFPort>>();
 		for (String h: hosts.keySet()) {
 			if (destIP.toString().contentEquals(h)) {
 				dest = hosts.get(h);
@@ -69,33 +76,65 @@ public class Routes {
 //				activeFlowsInSw.put(s, val);
 //				i = 1;
 //			}			
-			logger.info("**************** {} ****************", sw.getId().toString());
+			//logger.info("**************** {} ****************", sw.getId().toString());
 			if (sw.getId().toString().contentEquals(dest)) {
-				logger.info("****************YES: ****************");
+				//logger.info("****************YES: ****************");
 				outPort = OFPort.of(Integer.parseInt(dest.substring(dest.length()-1)));
-				Flows.simpleAdd(sw, pin, cntx, outPort, inPort);
+				ports.put(outPort, inPort);
+				toAdd.put(sw, ports);
+				ports = new HashMap<OFPort, OFPort>();
+				switchesID.add(sw);
+				Collections.reverse(switchesID);
+				for (IOFSwitch s: switchesID) {
+					//logger.info("**************** {} ************ID****", s);
+
+					HashMap<OFPort, OFPort> port = toAdd.get(s);
+					for (OFPort p: port.keySet()) {
+						if (s == firstSW) {
+							Flows.simpleAdd(s, pin, cntx, p, port.get(p), true);
+						}
+						Flows.simpleAdd(s, pin, cntx, p, port.get(p), false);
+					}
+					//Flows.simpleAdd(sw, pin, cntx, outPort, inPort);
+				}
 				break;
-			}else {
 				
-				activeFlowsPerPort = activeFlowsInSw.get(sw);
-				logger.info("**************** {} ****************", activeFlowsPerPort);
-							
-					
-//				if( activeFlowsPerPort.containsKey(Integer.parseInt(inPort.toString()))) {
-//					portToRemove.add(inPort.getPortNumber());
-//				}
+			}else {
+				synchronized (activeFlowsInSw) {
+					activeFlowsPerPort = activeFlowsInSw.get(sw);
+				}
+				logger.info("**************** {} ********POBRANE********", activeFlowsPerPort);
+				
+				if (activeFlowsPerPort.size() != 3) {
+					HashSet<Integer> keys = new HashSet<>();
+					String id = sw.getId().toString();
+					for (int n=1; n<5; n++) {						
+						if (n != Integer.parseInt(id.substring(id.length()-1))) {
+							keys.add(n);
+						}
+					}
+					HashSet<Integer> allKeys = new HashSet<>(activeFlowsPerPort.keySet());
+					allKeys.addAll(keys);
+					allKeys.removeAll(activeFlowsPerPort.keySet());
+					for (Integer a: allKeys) {
+						activeFlowsPerPort.put(a, 100);
+					}
+				}
 				
 				for (Integer p: portToRemove) {
 					activeFlowsPerPort.remove(Integer.parseInt(p.toString()));
 				}
-				logger.info("**************** {} ****************", activeFlowsPerPort);
+				//logger.info("**************** {} ******PO USUNIECIU**********", activeFlowsPerPort);
 				
 				Integer minNum = Collections.min(activeFlowsPerPort.values());
 				for (Map.Entry<Integer, Integer> hash: activeFlowsPerPort.entrySet()) {
 					if(minNum.equals(hash.getValue())) {
 						outPort = OFPort.of(hash.getKey());
-						Flows.simpleAdd(sw, pin, cntx, outPort, inPort);
-						switchesID.add(sw.getId());
+						//Flows.simpleAdd(sw, pin, cntx, outPort, inPort);
+						ports.put(outPort, inPort);
+						toAdd.put(sw, ports);
+						ports = new HashMap<OFPort, OFPort>();
+						switchesID.add(sw);
 						//logger.info("**** {} *****", outPort);
 						break;						
 					}

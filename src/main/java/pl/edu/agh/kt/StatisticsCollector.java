@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -22,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import net.floodlightcontroller.core.IOFSwitch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 
@@ -35,12 +37,15 @@ public class StatisticsCollector {
 	long thr = 0;
 	private HashMap<Integer, Long> bytes = new HashMap<Integer, Long>();
 	private HashMap<Integer, Long> both = new HashMap<Integer, Long>();
-	protected HashMap<Integer, Integer> activeFlowsPerPort = new HashMap<Integer, Integer>();
-	protected static HashMap<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw = new HashMap<IOFSwitch, HashMap<Integer, Integer>>();
+	protected HashMap<Integer, Integer> activeFlowsPerPort;
+	private static Semaphore mutex = new Semaphore(1);
+	//protected static HashMap<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw = new HashMap<IOFSwitch, HashMap<Integer, Integer>>();
+	protected static Map<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw = Collections.synchronizedMap(new HashMap<IOFSwitch, HashMap<Integer, Integer>>());
 	public class PortStatisticsPoller extends TimerTask {
 		private final Logger logger = LoggerFactory.getLogger(PortStatisticsPoller.class);
 		@Override
 		public void run() {
+			activeFlowsPerPort = new HashMap<Integer, Integer>();
 			//logger.debug("run() begin");
 			synchronized (StatisticsCollector.this) {
 				if (sw == null) { // no switch
@@ -55,38 +60,10 @@ public class StatisticsCollector {
 				//reqFlow = sw.getOFFactory().buildFlowStatsRequest().setOutPort(OFPort.ANY).setTableId(TableId.ALL).build();
 				//req = reqFlow;
 				try {
-					/*
-					if (req != null) {
-						future = sw.writeStatsRequest(req);
-						values = (List<OFStatsReply>)
-						future.get(PORT_STATISTICS_POLLING_INTERVAL * 1000 / 2, TimeUnit.MILLISECONDS);
-					}
-					OFPortStatsReply psr = (OFPortStatsReply) values.get(0);
-					logger.info("Switch id: {}", sw.getId());
-					for (OFPortStatsEntry pse : psr.getEntries()) {
-						if (pse.getPortNo().getPortNumber() > 0) {
-							logger.info("\tport number: {}, txPackets: {}",
-									pse.getPortNo().getPortNumber(),
-									pse.getTxPackets().getValue());
-							bytes.put(pse.getPortNo().getPortNumber(), pse.getTxBytes().getValue());							
-						}
-					}
-					for (Integer i: bytes.keySet()) {
-						second =  bytes.get(i);
-						if (both.get(i) != null) {
-							first = both.get(i);
-							diff = second - first;
-							thr = diff/interval;
-							logger.info("\tThroughput: {}", thr);
-						}
-						first = bytes.get(i);
-						both.put(i, first);
-					}
-					*/
 					
+					String id = sw.getId().toString();
 					for (int i=1; i<5; i++) {
 						Integer flows = 0;
-						String id = sw.getId().toString();
 						if (i != Integer.parseInt(id.substring(id.length()-1))) {
 							reqFlow = sw.getOFFactory().buildFlowStatsRequest().setOutPort(OFPort.of(i)).setTableId(TableId.ALL).build();
 							if (reqFlow != null) {
@@ -105,11 +82,18 @@ public class StatisticsCollector {
 							}
 								activeFlowsPerPort.put(i, flows);
 								//activeFlowsPerPort.put(i, psr.getEntries().size());
-								activeFlowsInSw.put(sw, activeFlowsPerPort);
-								//logger.info("Information: {}", activeFlowsInSw);
+								
+								//logger.info("Information: {}", activeFlowsPerPort);
 							//}
 					}
 					}
+				
+					synchronized (activeFlowsInSw) {
+						activeFlowsInSw.put(sw, activeFlowsPerPort);
+					}
+			
+					//logger.info("Information: {}", activeFlowsPerPort);
+					//logger.info("Information: {}", activeFlowsInSw);
 				} catch (InterruptedException | ExecutionException | TimeoutException ex) {
 					logger.error("Error during statistics polling", ex);
 				}
@@ -128,10 +112,10 @@ public class StatisticsCollector {
 				PORT_STATISTICS_POLLING_INTERVAL);
 	}
 	
-	public static HashMap<IOFSwitch, HashMap<Integer, Integer>> getFlows(){
-		return activeFlowsInSw;
+	public static Map<IOFSwitch, HashMap<Integer, Integer>> getFlows(){
+		return activeFlowsInSw;	
 	}
-	
+
 	
 //	//public static StatisticsCollector getInstance(IOFSwitch sw) {
 //		logger.debug("getInstance() begin");
