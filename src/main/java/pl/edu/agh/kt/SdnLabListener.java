@@ -74,7 +74,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 			FloodlightContext cntx) {
 		activeFlows = Collections.synchronizedMap(new HashMap<IOFSwitch, HashMap<Integer, Integer>>());
 		logger.info("************* NEW PACKET IN *************");
-		logger.info("************* {} **********SW***", sw.getId());
+		//logger.info("************* {} **********SW***", sw.getId());
 		
 		// TODO LAB 6
 		OFPacketIn pin = (OFPacketIn) msg;
@@ -85,8 +85,9 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 		extractor.packetExtract(cntx);
 		destIP = extractor.getDestIP();
 		//logger.info("***{} ***", extractor.getDestIP());
+		
 		activeFlows = StatisticsCollector.getFlows();
-				
+		
 		//logger.info("**************** {} ************GET FLOWS****", activeFlowsInSw);
 
 		Routes.calculatePath(sw, activeFlows, destIP, pin, cntx);

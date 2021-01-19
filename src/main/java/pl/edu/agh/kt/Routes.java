@@ -58,6 +58,7 @@ public class Routes {
 		OFPort outPort = OFPort.of(0);
 		OFPort inPort = pin.getInPort();
 		List<Integer> portToRemove = new ArrayList<>();
+		//activeFlowsPerPort = new HashMap<Integer, Integer>();
 		switchesID = new ArrayList<>();
 		toAdd = new HashMap<IOFSwitch, HashMap<OFPort, OFPort>>();
 		for (String h: hosts.keySet()) {
@@ -103,10 +104,14 @@ public class Routes {
 				break;
 				
 			}else {
-				//activeFlowsPerPort = new HashMap<Integer, Integer>();
+				
 				activeFlowsPerPort = new HashMap<Integer, Integer>(activeFlowsInSw.get(sw));
 
+<<<<<<< HEAD
 				//logger.info("**************** {} ********POBRANE********", activeFlowsPerPort);
+=======
+				logger.info("**** Active Flows **** {} **** SW: **** {} ****", activeFlowsPerPort, sw.getId());
+>>>>>>> nowe
 				
 //				if (activeFlowsPerPort.size() != 3) {
 //					HashSet<Integer> keys = new HashSet<>();

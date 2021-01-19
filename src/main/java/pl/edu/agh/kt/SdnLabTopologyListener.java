@@ -44,11 +44,10 @@ public class SdnLabTopologyListener implements ITopologyListener {
 				//swList.add(update.getSrc());
 				switches = SdnLabListener.getSwitches();
 				//for (IOFSwitch s: switches.values()) {
-				//for (IOFSwitch s: switches.values()) {
+				for (IOFSwitch s: switches.values()) {
 					//logger.debug("******* {} *******", s.toString());
-					//StatisticsCollector collector = new StatisticsCollector(s);
-				//}
-				StatisticsCollector collector = new StatisticsCollector(switches);
+					StatisticsCollector collector = new StatisticsCollector(s);
+				}
 				//SdnLabListener.getRouting().calculateSpfTree(switches); //it should be when packet in arrives
 
 				break;

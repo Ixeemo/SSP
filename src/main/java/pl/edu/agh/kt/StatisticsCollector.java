@@ -30,7 +30,6 @@ import java.util.HashMap;
 public class StatisticsCollector {
 	private static final Logger logger = LoggerFactory.getLogger(StatisticsCollector.class);
 	private IOFSwitch sw;
-	private Map<DatapathId, IOFSwitch> switches;
 	long first = 0;
 	long second = 0;
 	long diff = 0;
@@ -38,18 +37,17 @@ public class StatisticsCollector {
 	long thr = 0;
 	private HashMap<Integer, Long> bytes = new HashMap<Integer, Long>();
 	private HashMap<Integer, Long> both = new HashMap<Integer, Long>();
-	private HashMap<Integer, Integer> activeFlowsPerPort;
+	protected HashMap<Integer, Integer> activeFlowsPerPort;
+	private static Semaphore mutex = new Semaphore(1);
 	//protected static HashMap<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw = new HashMap<IOFSwitch, HashMap<Integer, Integer>>();
-	protected static Map<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw = new HashMap<IOFSwitch, HashMap<Integer, Integer>>();
+	protected static Map<IOFSwitch, HashMap<Integer, Integer>> activeFlowsInSw = Collections.synchronizedMap(new HashMap<IOFSwitch, HashMap<Integer, Integer>>());
 	public class PortStatisticsPoller extends TimerTask {
 		private final Logger logger = LoggerFactory.getLogger(PortStatisticsPoller.class);
 		@Override
 		public void run() {
-			//activeFlowsPerPort = new HashMap<Integer, Integer>();
+			activeFlowsPerPort = new HashMap<Integer, Integer>();
 			//logger.debug("run() begin");
 			synchronized (StatisticsCollector.this) {
-				for (IOFSwitch sw: switches.values()) {
-					activeFlowsPerPort = new HashMap<Integer, Integer>();
 				if (sw == null) { // no switch
 					logger.error("run() end (no switch)");
 					return;
@@ -66,7 +64,6 @@ public class StatisticsCollector {
 					String id = sw.getId().toString();
 					for (int i=1; i<5; i++) {
 						Integer flows = 0;
-						
 						if (i != Integer.parseInt(id.substring(id.length()-1))) {
 							reqFlow = sw.getOFFactory().buildFlowStatsRequest().setOutPort(OFPort.of(i)).setTableId(TableId.ALL).build();
 							if (reqFlow != null) {
@@ -91,14 +88,15 @@ public class StatisticsCollector {
 					}
 					}
 				
-					activeFlowsInSw.put(sw, activeFlowsPerPort);
+					synchronized (activeFlowsInSw) {
+						activeFlowsInSw.put(sw, activeFlowsPerPort);
+					}
 			
 					//logger.info("Information: {}", activeFlowsPerPort);
 					//logger.info("Information: {}", activeFlowsInSw);
 				} catch (InterruptedException | ExecutionException | TimeoutException ex) {
 					logger.error("Error during statistics polling", ex);
 				}
-			}
 			}
 			//logger.debug("run() end");
 			
@@ -107,10 +105,8 @@ public class StatisticsCollector {
 
 	public static final int PORT_STATISTICS_POLLING_INTERVAL = 3000; // in ms
 	private static StatisticsCollector singleton;
-	//public StatisticsCollector(IOFSwitch sw) {
-	public StatisticsCollector(Map<DatapathId, IOFSwitch> switches) {
-		//this.sw = sw;
-		this.switches = switches;
+	public StatisticsCollector(IOFSwitch sw) {
+		this.sw = sw;
 		//this.activeFlowsInSw = activeFlowsInSw;
 		new Timer().scheduleAtFixedRate(new PortStatisticsPoller(), 0,
 				PORT_STATISTICS_POLLING_INTERVAL);
@@ -118,7 +114,6 @@ public class StatisticsCollector {
 	
 	public static Map<IOFSwitch, HashMap<Integer, Integer>> getFlows(){
 		return activeFlowsInSw;	
-
 	}
 
 	
