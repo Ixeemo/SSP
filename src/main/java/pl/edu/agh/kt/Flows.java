@@ -46,7 +46,7 @@ public class Flows {
 	protected static boolean FLOWMOD_DEFAULT_MATCH_TRANSPORT = true;
 
 	public Flows() {
-		logger.info("Flows() begin/end");
+		//logger.info("Flows() begin/end");
 	}
 	
 	public static void simpleAdd(IOFSwitch sw, OFPacketIn pin, FloodlightContext cntx, OFPort outPort, OFPort inPort, Boolean Flag) {
@@ -71,9 +71,9 @@ public class Flows {
 		// write flow to switch
 		try {
 			sw.write(fmb.build());
-			logger.info("**************** {} ****************", sw);
-			logger.info("Flow from port {} forwarded to port {}; match: {}",
-					new Object[] { inPort.getPortNumber(), outPort.getPortNumber(), m.toString() });
+			//logger.info("**************** {} ****************", sw);
+			//logger.info("Flow from port {} forwarded to port {}; match: {}",
+			//		new Object[] { inPort.getPortNumber(), outPort.getPortNumber(), m.toString() });
 		} catch (Exception e) {
 			logger.error("error {}", e);
 		}

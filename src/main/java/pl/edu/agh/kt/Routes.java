@@ -83,6 +83,10 @@ public class Routes {
 				toAdd.put(sw, ports);
 				ports = new HashMap<OFPort, OFPort>();
 				switchesID.add(sw);
+				logger.info("***Flow route: ***");
+				for (IOFSwitch s: switchesID) {
+					logger.info("*** {} ***", s);
+				}
 				Collections.reverse(switchesID);
 				for (IOFSwitch s: switchesID) {
 					//logger.info("**************** {} ************ID****", s);
@@ -102,7 +106,7 @@ public class Routes {
 				//activeFlowsPerPort = new HashMap<Integer, Integer>();
 				activeFlowsPerPort = new HashMap<Integer, Integer>(activeFlowsInSw.get(sw));
 
-				logger.info("**************** {} ********POBRANE********", activeFlowsPerPort);
+				//logger.info("**************** {} ********POBRANE********", activeFlowsPerPort);
 				
 //				if (activeFlowsPerPort.size() != 3) {
 //					HashSet<Integer> keys = new HashSet<>();
