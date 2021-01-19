@@ -74,7 +74,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 			FloodlightContext cntx) {
 		activeFlows = Collections.synchronizedMap(new HashMap<IOFSwitch, HashMap<Integer, Integer>>());
 		logger.info("************* NEW PACKET IN *************");
-		//logger.info("************* {} **********SW***", sw.getId());
+		logger.info("**** Switch: {} ****", sw.getId());
 		
 		// TODO LAB 6
 		OFPacketIn pin = (OFPacketIn) msg;

@@ -36,7 +36,7 @@ public class Flows {
 
 	private static final Logger logger = LoggerFactory.getLogger(Flows.class);
 
-	public static short FLOWMOD_DEFAULT_IDLE_TIMEOUT = 25; // in seconds
+	public static short FLOWMOD_DEFAULT_IDLE_TIMEOUT = 20; // in seconds
 	public static short FLOWMOD_DEFAULT_HARD_TIMEOUT = 0; // infinite
 	public static short FLOWMOD_DEFAULT_PRIORITY = 100;
 
@@ -73,11 +73,7 @@ public class Flows {
 			sw.write(fmb.build());
 			//logger.info("**************** {} ****************", sw);
 			//logger.info("Flow from port {} forwarded to port {}; match: {}",
-<<<<<<< HEAD
-			//		new Object[] { inPort.getPortNumber(), outPort.getPortNumber(), m.toString() });
-=======
-					//new Object[] { inPort.getPortNumber(), outPort.getPortNumber(), m.toString() });
->>>>>>> nowe
+			//	new Object[] { inPort.getPortNumber(), outPort.getPortNumber(), m.toString() });
 		} catch (Exception e) {
 			logger.error("error {}", e);
 		}
