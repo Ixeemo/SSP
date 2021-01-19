@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 public class Routes {
 	private IRoutingService routingService;
 	protected static java.util.Map<Link,LinkInfo>links;	
-	private ITopologyService topoInstance;
 	//protected List<Path> paths = new ArrayList<>();
 	protected static final Logger logger = LoggerFactory.getLogger(Routes.class);
 	protected List<Route> paths = new ArrayList<>();
@@ -43,8 +42,6 @@ public class Routes {
 	protected static HashMap<OFPort, OFPort> ports = new HashMap<OFPort, OFPort>();
 	protected static HashMap<IOFSwitch, HashMap<OFPort, OFPort>> toAdd;
 
-
-	
 	public Routes(IRoutingService routingService) {
 		super();
 		this.routingService = routingService;
@@ -84,6 +81,10 @@ public class Routes {
 				toAdd.put(sw, ports);
 				ports = new HashMap<OFPort, OFPort>();
 				switchesID.add(sw);
+				logger.info("***Flow route: ***");
+				for (IOFSwitch s: switchesID) {
+					logger.info("*** {} ***", s);
+				}
 				Collections.reverse(switchesID);
 				for (IOFSwitch s: switchesID) {
 					//logger.info("**************** {} ************ID****", s);
@@ -105,21 +106,21 @@ public class Routes {
 				
 				logger.info("**** Flows: **** {} ***** On: **** {} ", activeFlowsPerPort, sw.getId());
 				
-				if (activeFlowsPerPort.size() != 3) {
-					HashSet<Integer> keys = new HashSet<>();
-					String id = sw.getId().toString();
-					for (int n=1; n<5; n++) {						
-						if (n != Integer.parseInt(id.substring(id.length()-1))) {
-							keys.add(n);
-						}
-					}
-					HashSet<Integer> allKeys = new HashSet<>(activeFlowsPerPort.keySet());
-					allKeys.addAll(keys);
-					allKeys.removeAll(activeFlowsPerPort.keySet());
-					for (Integer a: allKeys) {
-						activeFlowsPerPort.put(a, 100);
-					}
-				}
+//				if (activeFlowsPerPort.size() != 3) {
+//					HashSet<Integer> keys = new HashSet<>();
+//					String id = sw.getId().toString();
+//					for (int n=1; n<5; n++) {						
+//						if (n != Integer.parseInt(id.substring(id.length()-1))) {
+//							keys.add(n);
+//						}
+//					}
+//					HashSet<Integer> allKeys = new HashSet<>(activeFlowsPerPort.keySet());
+//					allKeys.addAll(keys);
+//					allKeys.removeAll(activeFlowsPerPort.keySet());
+//					for (Integer a: allKeys) {
+//						activeFlowsPerPort.put(a, 100);
+//					}
+//				}
 				
 				for (Integer p: portToRemove) {
 					activeFlowsPerPort.remove(Integer.parseInt(p.toString()));
